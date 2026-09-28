@@ -1,0 +1,9 @@
+#!/bin/sh
+set -e
+GRADLE_VERSION="8.4"
+if command -v gradle >/dev/null 2>&1; then
+    exec gradle "$@"
+else
+    echo "Using system gradle or downloading wrapper..."
+    exec gradle "$@"
+fi

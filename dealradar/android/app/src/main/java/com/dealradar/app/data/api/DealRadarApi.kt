@@ -34,7 +34,7 @@ interface DealRadarApi {
 object DealRadarApiClient {
     // Reemplazar con la URL de producción de tu servidor backend en Render/Railway
     // Para emulador local de Android se usa http://10.0.2.2:8000/
-    var baseUrl: String = "https://dealradar-backend.onrender.com/"
+    var baseUrl: String = "https://dealradar-pe4c.onrender.com/"
 
     private val logging = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY

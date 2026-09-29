@@ -65,7 +65,8 @@ data class CreateAlertRequest(
 )
 
 data class DeviceRegisterRequest(
-    val device_id: String,
+    @com.google.gson.annotations.SerializedName("device_id")
+    val deviceId: String,
     val fcm_token: String? = null
 )
 

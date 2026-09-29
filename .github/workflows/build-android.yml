@@ -1,0 +1,46 @@
+name: Compilar APK DealRadar
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Compilar APK Debug
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clonar Repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: 17
+
+      - name: Configurar Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Crear google-services.json de respaldo (si falta)
+        run: |
+          mkdir -p dealradar/android/app
+          if [ ! -f dealradar/android/app/google-services.json ]; then
+            echo '{"project_info":{"project_number":"123456789","project_id":"dealradar-demo","storage_bucket":"dealradar-demo.appspot.com"},"client":[{"client_info":{"mobilesdk_app_id":"1:123456789:android:abcdef","android_client_info":{"package_name":"com.dealradar.app"}},"api_key":[{"current_key":"AIzaSyMockKeyForBuild1234567890"}],"services":{"analytics_service":{"status":1}}}]}' > dealradar/android/app/google-services.json
+          fi
+
+      - name: Compilar APK con Gradle
+        run: |
+          cd dealradar/android
+          chmod +x gradlew || true
+          ./gradlew assembleDebug --stacktrace
+
+      - name: Subir APK generado
+        uses: actions/upload-artifact@v4
+        with:
+          name: DealRadar-Debug-APK
+          path: dealradar/android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 14

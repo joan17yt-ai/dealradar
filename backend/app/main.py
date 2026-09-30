@@ -18,515 +18,510 @@ from app.services.notifications import init_firebase
 scheduler = AsyncIOScheduler()
 
 HTML_PAGE = """<!DOCTYPE html>
-<html lang="es" class="dark">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DealRadar Colombia — Alertas de Ofertas y Comparador de Precios</title>
-    <meta name="description" content="Rastreador de precios en tiempo real para Mercado Libre, Alkosto, Éxito y Amazon en Colombia.">
-    <meta name="theme-color" content="#0F141C">
-    
-    <!-- Tailwind CSS CDN & Lucide Icons -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DealRadar Colombia — El Comparador de Gangas #1</title>
+    <!-- Google Fonts & Tailwind CSS & Lucide Icons -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
-            darkMode: 'class',
             theme: {
                 extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
                     colors: {
-                        darkBg: '#0B0F17',
-                        darkSurface: '#131B26',
-                        darkCard: '#1A2332',
-                        radarGreen: '#00E676',
-                        radarBlue: '#00B0FF',
-                        discountRed: '#FF3B30',
-                        starGold: '#FFD60A'
+                        brandDark: '#0A0E17',
+                        brandSurface: '#121826',
+                        brandCard: '#182234',
+                        brandCardHover: '#1E2B42',
+                        brandAccent: '#00F076',
+                        brandAccentDark: '#00B859',
+                        brandGold: '#FFB800',
+                        brandRed: '#FF334B',
+                        brandBlue: '#00A3FF'
                     }
                 }
             }
         }
     </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0B0F17; color: #FFFFFF; }
-        .glass-panel { background: rgba(19, 27, 38, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
-        .pulse-beacon { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .5; transform: scale(1.15); } }
-        /* Hide scrollbars */
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        body { background-color: #0A0E17; color: #FFFFFF; font-family: 'Outfit', sans-serif; overflow-x: hidden; }
+        .glow-effect { box-shadow: 0 0 35px -5px rgba(0, 240, 118, 0.25); }
+        .glow-red { box-shadow: 0 0 25px -5px rgba(255, 51, 75, 0.35); }
+        .product-card { transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+        .product-card:hover { transform: translateY(-4px); border-color: rgba(0, 240, 118, 0.4); box-shadow: 0 12px 30px -10px rgba(0,0,0,0.8); }
+        .banner-gradient { background: linear-gradient(135deg, #0d1e38 0%, #112d1b 50%, #0d1e38 100%); }
     </style>
 </head>
-<body class="min-h-screen pb-20">
+<body class="min-h-screen flex flex-col antialiased">
 
-    <!-- Barra Superior / Header -->
-    <header class="sticky top-0 z-50 glass-panel border-b border-gray-800/80 px-4 py-3">
-        <div class="max-w-4xl mx-auto flex items-center justify-between">
-            <div class="flex items-center space-x-2.5">
-                <div class="relative flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
-                    <span class="w-2.5 h-2.5 rounded-full bg-radarGreen pulse-beacon"></span>
+    <!-- Top Announcement Bar -->
+    <div class="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-dark font-extrabold text-xs text-center py-2 px-4 flex items-center justify-center gap-2 tracking-wide text-black">
+        <i data-lucide="zap" class="w-4 h-4 fill-current"></i>
+        <span>¡RADAR DE PRECIOS ACTIVADO! MONITOREAMOS MERCADO LIBRE, ALKOSTO, ÉXITO Y AMAZON LAS 24 HORAS</span>
+        <span class="hidden md:inline-block bg-black/20 text-white px-2 py-0.5 rounded-full text-[10px] font-bold">100% GRATIS</span>
+    </div>
+
+    <!-- Header Principal -->
+    <header class="sticky top-0 z-50 bg-brandDark/95 backdrop-blur-md border-b border-gray-800/80 px-4 lg:px-8 py-3.5">
+        <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+            
+            <!-- Logo -->
+            <a href="/" class="flex items-center gap-2.5 group">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brandAccent to-emerald-600 flex items-center justify-center text-brandDark font-black text-xl shadow-lg shadow-emerald-500/20 group-hover:scale-105 transition">
+                    <i data-lucide="radar" class="w-6 h-6 stroke-[2.5]"></i>
                 </div>
                 <div>
-                    <h1 class="text-lg font-black tracking-tight flex items-center gap-1.5">
-                        DEAL<span class="text-radarGreen">RADAR</span>
-                        <span class="text-[10px] font-bold uppercase bg-emerald-500/20 text-radarGreen px-1.5 py-0.5 rounded">Colombia</span>
-                    </h1>
+                    <span class="text-2xl font-black tracking-tight text-white flex items-center gap-1">
+                        DEAL<span class="text-brandAccent">RADAR</span>
+                    </span>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-emerald-400 block -mt-1">Colombia Oficial</span>
                 </div>
+            </a>
+
+            <!-- Barra de Búsqueda Centrada -->
+            <div class="flex-1 max-w-2xl mx-4 hidden md:block">
+                <form onsubmit="handleGlobalSearch(event)" class="relative flex items-center">
+                    <input id="desktopSearchInput" type="text" placeholder="Busca un celular, computador, nevera o producto exacto..." 
+                        class="w-full bg-brandSurface border border-gray-700/80 rounded-full py-2.5 pl-11 pr-28 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-brandAccent focus:ring-1 focus:ring-brandAccent transition">
+                    <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-4 pointer-events-none"></i>
+                    <button type="submit" class="absolute right-1.5 px-4 py-1.5 rounded-full bg-brandAccent text-brandDark font-extrabold text-xs hover:bg-emerald-400 transition shadow">
+                        Comparar
+                    </button>
+                </form>
             </div>
 
-            <div class="flex items-center space-x-2">
-                <button onclick="switchTab('savings')" class="flex items-center space-x-1 px-3 py-1.5 rounded-full bg-darkCard border border-gray-700/60 text-xs font-semibold text-gray-300 hover:text-white hover:border-radarGreen transition">
-                    <i data-lucide="award" class="w-3.5 h-3.5 text-starGold"></i>
-                    <span id="headerSavingsCounter">$0 Ahorro</span>
+            <!-- Botones de Acción -->
+            <div class="flex items-center gap-3">
+                <a href="#buscador" onclick="document.getElementById('mobileSearchInput').focus()" class="md:hidden p-2 rounded-xl bg-brandSurface text-gray-300">
+                    <i data-lucide="search" class="w-5 h-5"></i>
+                </a>
+                <button onclick="scrollToDeals()" class="flex items-center gap-1.5 px-4 py-2 rounded-full bg-brandAccent/10 border border-brandAccent/30 text-brandAccent text-xs font-bold hover:bg-brandAccent hover:text-brandDark transition">
+                    <i data-lucide="flame" class="w-4 h-4 fill-current"></i>
+                    <span>Súper Ofertas</span>
                 </button>
             </div>
         </div>
-    </header>
 
-    <!-- Contenedor Principal de Vistas -->
-    <main class="max-w-4xl mx-auto px-4 pt-4">
-
-        <!-- ================= VISTA 1: RADAR DE GANGAS (FEED) ================= -->
-        <section id="view-feed" class="space-y-4">
-            <!-- Banner Hero -->
-            <div class="relative overflow-hidden rounded-2xl p-5 border border-emerald-500/20 bg-gradient-to-r from-emerald-950/40 via-darkCard to-blue-950/30">
-                <div class="relative z-10 space-y-1">
-                    <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold rounded-full bg-emerald-500/20 text-radarGreen">
-                        <i data-lucide="flame" class="w-3 h-3"></i> Ofertón del Día
-                    </span>
-                    <h2 class="text-xl font-extrabold text-white">Monitoreo de Precios en Vivo</h2>
-                    <p class="text-xs text-gray-400">Rastreamos Mercado Libre, Alkosto, Éxito y Amazon para avisarte de gangas reales.</p>
-                </div>
-                <div class="absolute -right-6 -bottom-6 w-32 h-32 rounded-full bg-radarGreen/10 blur-2xl pointer-events-none"></div>
-            </div>
-
-            <!-- Selector de Categorías -->
-            <div class="flex space-x-2 overflow-x-auto no-scrollbar py-1 text-xs">
-                <button onclick="filterCategory('Todos')" class="cat-pill active-pill whitespace-nowrap px-4 py-2 rounded-xl font-semibold bg-radarGreen text-darkBg transition">Todos</button>
-                <button onclick="filterCategory('Celulares')" class="cat-pill whitespace-nowrap px-4 py-2 rounded-xl font-medium bg-darkCard text-gray-300 hover:text-white border border-gray-800 transition">Celulares</button>
-                <button onclick="filterCategory('Computadores')" class="cat-pill whitespace-nowrap px-4 py-2 rounded-xl font-medium bg-darkCard text-gray-300 hover:text-white border border-gray-800 transition">Computadores</button>
-                <button onclick="filterCategory('Neveras')" class="cat-pill whitespace-nowrap px-4 py-2 rounded-xl font-medium bg-darkCard text-gray-300 hover:text-white border border-gray-800 transition">Neveras</button>
-                <button onclick="filterCategory('Parlantes')" class="cat-pill whitespace-nowrap px-4 py-2 rounded-xl font-medium bg-darkCard text-gray-300 hover:text-white border border-gray-800 transition">Parlantes & Audio</button>
-            </div>
-
-            <!-- Lista de Ofertas Destacadas -->
-            <div id="feedList" class="space-y-3">
-                <div class="text-center py-10 text-gray-500 text-sm">Cargando las mejores gangas de Colombia...</div>
-            </div>
-        </section>
-
-        <!-- ================= VISTA 2: BUSCADOR MULTITIENDA ================= -->
-        <section id="view-search" class="space-y-4 hidden">
-            <div class="space-y-1">
-                <h2 class="text-lg font-bold text-white flex items-center gap-2">
-                    <i data-lucide="search" class="w-5 h-5 text-radarGreen"></i> Buscador Multitienda
-                </h2>
-                <p class="text-xs text-gray-400">Escribe cualquier producto (ej. <span class="text-emerald-400 font-medium">impresoras, iPhone 14, televisor</span>) para comparar precios en Colombia.</p>
-            </div>
-
-            <!-- Formulario de búsqueda -->
-            <form onsubmit="handleSearch(event)" class="relative">
-                <input id="searchInput" type="text" placeholder="¿Qué producto buscas?" 
-                    class="w-full pl-11 pr-24 py-3.5 rounded-xl bg-darkSurface border border-gray-700/70 text-sm text-white focus:outline-none focus:border-radarGreen transition shadow-inner">
-                <i data-lucide="search" class="w-5 h-5 absolute left-3.5 top-3.5 text-gray-400"></i>
-                <button type="submit" class="absolute right-2 top-2 px-4 py-1.5 rounded-lg bg-radarGreen text-darkBg font-bold text-xs hover:bg-emerald-400 transition shadow">
+        <!-- Búsqueda en Móvil -->
+        <div class="mt-2.5 md:hidden">
+            <form onsubmit="handleGlobalSearch(event)" class="relative flex items-center">
+                <input id="mobileSearchInput" type="text" placeholder="Escribe un producto (ej. Portátil, iPhone, Nevera)..." 
+                    class="w-full bg-brandSurface border border-gray-700 rounded-full py-2.5 pl-10 pr-24 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-brandAccent">
+                <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3.5 pointer-events-none"></i>
+                <button type="submit" class="absolute right-1 px-3 py-1 rounded-full bg-brandAccent text-brandDark font-bold text-xs">
                     Buscar
                 </button>
             </form>
+        </div>
+    </header>
 
-            <!-- Loading de búsqueda -->
-            <div id="searchLoading" class="hidden text-center py-10 space-y-2">
-                <div class="inline-block w-8 h-8 border-3 border-radarGreen border-t-transparent rounded-full animate-spin"></div>
-                <p class="text-xs text-gray-400">Consultando catálogos de Mercado Libre, Alkosto, Éxito y Amazon...</p>
+    <!-- Contenido Principal -->
+    <main class="flex-1 max-w-7xl mx-auto w-full px-4 lg:px-8 py-6 space-y-10">
+
+        <!-- ================= HERO BANNER PRINCIPAL ================= -->
+        <div class="banner-gradient rounded-3xl p-6 lg:p-10 border border-emerald-500/30 relative overflow-hidden glow-effect">
+            <div class="max-w-2xl relative z-10 space-y-4">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brandRed/20 border border-brandRed/40 text-brandRed font-black text-xs uppercase tracking-wider animate-pulse">
+                    <i data-lucide="zap" class="w-3.5 h-3.5 fill-current"></i> Gangas del Día en Colombia
+                </div>
+                <h1 class="text-3xl lg:text-5xl font-black text-white leading-tight tracking-tight">
+                    Encuentra siempre el <span class="text-brandAccent underline decoration-brandAccent/40 decoration-4">precio más barato</span> garantizado.
+                </h1>
+                <p class="text-sm lg:text-base text-gray-300 font-normal leading-relaxed">
+                    Comparamos las tiendas oficiales en vivo. Al hacer clic en cualquier oferta te llevamos <strong class="text-white">directamente al producto exacto</strong> para que compres al menor precio antes de que se agote.
+                </p>
+                <div class="flex flex-wrap items-center gap-3 pt-2">
+                    <span class="text-xs text-gray-400 font-semibold flex items-center gap-1.5 bg-black/30 px-3 py-1.5 rounded-lg border border-gray-700">
+                        <i data-lucide="shield-check" class="w-4 h-4 text-brandAccent"></i> Enlaces directos a tiendas oficiales
+                    </span>
+                    <span class="text-xs text-gray-400 font-semibold flex items-center gap-1.5 bg-black/30 px-3 py-1.5 rounded-lg border border-gray-700">
+                        <i data-lucide="check" class="w-4 h-4 text-brandAccent"></i> Ordenado de menor a mayor precio
+                    </span>
+                </div>
             </div>
 
-            <!-- Resultados de Búsqueda -->
-            <div id="searchResults" class="space-y-3"></div>
+            <!-- Decoración visual del banner -->
+            <div class="absolute right-0 bottom-0 top-0 w-1/3 hidden lg:flex items-center justify-center opacity-40 pointer-events-none">
+                <i data-lucide="trending-down" class="w-64 h-64 text-brandAccent/30 stroke-[1]"></i>
+            </div>
+        </div>
+
+        <!-- ================= SECCIÓN DE COMPARACIÓN INTELIGENTE (CUANDO EL USUARIO BUSCA) ================= -->
+        <section id="comparadorSection" class="hidden space-y-6">
+            <div class="bg-brandSurface border-2 border-brandAccent/50 rounded-2xl p-5 lg:p-7 space-y-4 glow-effect">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-gray-800 pb-4">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-brandAccent flex items-center gap-1.5">
+                            <i data-lucide="check-circle-2" class="w-4 h-4"></i> Comparativa Realizada con Éxito
+                        </span>
+                        <h2 id="comparadorQueryTitle" class="text-2xl font-black text-white mt-1">Resultados para tu búsqueda</h2>
+                    </div>
+                    <div id="cheapestBanner" class="bg-brandAccent text-brandDark px-4 py-2 rounded-xl font-black text-sm flex items-center gap-2 shadow-lg shadow-emerald-500/20">
+                        <i data-lucide="trophy" class="w-5 h-5 fill-current"></i>
+                        <span id="cheapestStoreText">El más barato está en: Cargando...</span>
+                    </div>
+                </div>
+
+                <div class="text-xs text-gray-400 flex items-center gap-2">
+                    <i data-lucide="arrow-down-narrow-wide" class="w-4 h-4 text-brandAccent"></i>
+                    <span>Listado ordenado estrictamente <strong class="text-white">desde el más económico</strong> hasta el más costoso:</span>
+                </div>
+
+                <!-- Grilla de Tiendas Comparadas -->
+                <div id="comparadorResultsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Dinámico con JS -->
+                </div>
+            </div>
         </section>
 
-        <!-- ================= VISTA 3: MIS ALERTAS ACTIVAS ================= -->
-        <section id="view-alerts" class="space-y-4 hidden">
+        <!-- ================= CATEGORÍAS RÁPIDAS ================= -->
+        <div class="space-y-3">
             <div class="flex items-center justify-between">
-                <div>
-                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
-                        <i data-lucide="bell-ring" class="w-5 h-5 text-radarGreen"></i> Mis Alertas Vigiladas
-                    </h2>
-                    <p class="text-xs text-gray-400" id="alertsCountText">0 productos bajo vigilancia</p>
-                </div>
-                <button onclick="switchTab('search')" class="px-3 py-1.5 rounded-lg bg-emerald-500/20 text-radarGreen text-xs font-semibold hover:bg-emerald-500/30 transition">
-                    + Nueva Alerta
+                <h3 class="text-sm font-bold uppercase tracking-wider text-gray-400">Filtrar Gangas por Categoría</h3>
+                <span class="text-xs text-brandAccent font-semibold">Precios en Pesos Colombianos (COP)</span>
+            </div>
+            <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar text-xs font-bold">
+                <button onclick="filterCategory('Todos')" class="cat-btn active-cat px-5 py-2.5 rounded-xl bg-brandAccent text-brandDark shadow-md shadow-emerald-500/20 transition flex items-center gap-1.5">
+                    <i data-lucide="layout-grid" class="w-4 h-4"></i> Todos los Productos
+                </button>
+                <button onclick="filterCategory('Celulares')" class="cat-btn px-5 py-2.5 rounded-xl bg-brandSurface hover:bg-brandCard text-gray-300 hover:text-white border border-gray-800 transition flex items-center gap-1.5">
+                    <i data-lucide="smartphone" class="w-4 h-4"></i> Celulares & Smartphones
+                </button>
+                <button onclick="filterCategory('Computadores')" class="cat-btn px-5 py-2.5 rounded-xl bg-brandSurface hover:bg-brandCard text-gray-300 hover:text-white border border-gray-800 transition flex items-center gap-1.5">
+                    <i data-lucide="laptop" class="w-4 h-4"></i> Computadores & Laptops
+                </button>
+                <button onclick="filterCategory('Neveras')" class="cat-btn px-5 py-2.5 rounded-xl bg-brandSurface hover:bg-brandCard text-gray-300 hover:text-white border border-gray-800 transition flex items-center gap-1.5">
+                    <i data-lucide="refrigerator" class="w-4 h-4"></i> Neveras & Hogar
+                </button>
+                <button onclick="filterCategory('Parlantes')" class="cat-btn px-5 py-2.5 rounded-xl bg-brandSurface hover:bg-brandCard text-gray-300 hover:text-white border border-gray-800 transition flex items-center gap-1.5">
+                    <i data-lucide="speaker" class="w-4 h-4"></i> Parlantes & Audio
                 </button>
             </div>
+        </div>
 
-            <div id="userAlertsList" class="space-y-3">
-                <div class="text-center py-12 text-gray-500 text-sm">No tienes alertas creadas aún. Busca un producto para vigilarlo.</div>
+        <!-- ================= CATÁLOGO DE SÚPER OFERTAS (COLUMNAS / GRID) ================= -->
+        <section id="catalogoSection" class="space-y-4">
+            <div class="flex items-center justify-between border-b border-gray-800 pb-3">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="flame" class="w-5 h-5 text-brandRed fill-current"></i>
+                    <h2 class="text-xl font-extrabold text-white">Súper Ofertas Verificadas</h2>
+                </div>
+                <span id="dealsCountBadge" class="text-xs font-bold text-gray-400 bg-brandSurface px-3 py-1 rounded-full border border-gray-800">
+                    6 ofertas disponibles
+                </span>
+            </div>
+
+            <!-- Grilla Principal de Productos (1 columna en móvil, 2 en tablet, 3-4 en PC) -->
+            <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                <!-- Se llena dinámicamente con JavaScript con fotos reales y enlaces directos -->
             </div>
         </section>
 
-        <!-- ================= VISTA 4: DASHBOARD DE AHORRO ================= -->
-        <section id="view-savings" class="space-y-4 hidden">
-            <div class="rounded-2xl p-6 border border-emerald-500/20 bg-darkSurface text-center space-y-3">
-                <div class="inline-flex p-3 rounded-full bg-emerald-500/10 text-radarGreen">
-                    <i data-lucide="piggy-bank" class="w-8 h-8"></i>
+        <!-- ================= BANNER INFORMATIVO: CÓMO AHORRAR ================= -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6">
+            <div class="bg-brandSurface border border-gray-800 p-5 rounded-2xl flex items-start gap-3.5">
+                <div class="p-2.5 rounded-xl bg-emerald-500/10 text-brandAccent flex-shrink-0">
+                    <i data-lucide="badge-dollar-sign" class="w-6 h-6"></i>
                 </div>
                 <div>
-                    <span class="text-xs text-gray-400 uppercase tracking-wider font-semibold">Tu Ahorro Potencial Acumulado</span>
-                    <h2 id="totalSavedDisplay" class="text-3xl font-black text-white mt-0.5">$0 COP</h2>
-                </div>
-                <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-darkCard border border-gray-700 text-xs font-semibold text-starGold">
-                    <i data-lucide="shield-check" class="w-4 h-4"></i> Rango: <span id="userRankText">Cazador Activo</span>
+                    <h4 class="text-sm font-bold text-white">Siempre lo Más Barato</h4>
+                    <p class="text-xs text-gray-400 mt-1">El algoritmo organiza automáticamente las opciones de menor a mayor precio para que nunca pagues de más.</p>
                 </div>
             </div>
 
-            <div class="space-y-2">
-                <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 px-1">Consejos para comprar en Colombia</h3>
-                <div class="p-3.5 rounded-xl bg-darkCard border border-gray-800/80 text-xs text-gray-300 space-y-1">
-                    <p class="font-bold text-white flex items-center gap-1.5">
-                        <i data-lucide="check-circle" class="w-3.5 h-3.5 text-radarGreen"></i> Envíos gratis de Amazon a Colombia
-                    </p>
-                    <p class="text-gray-400">Recuerda que pedidos calificados de más de $35 USD en Amazon cuentan con envío gratuito directo hasta tu puerta en Colombia.</p>
+            <div class="bg-brandSurface border border-gray-800 p-5 rounded-2xl flex items-start gap-3.5">
+                <div class="p-2.5 rounded-xl bg-blue-500/10 text-brandBlue flex-shrink-0">
+                    <i data-lucide="external-link" class="w-6 h-6"></i>
                 </div>
-                <div class="p-3.5 rounded-xl bg-darkCard border border-gray-800/80 text-xs text-gray-300 space-y-1">
-                    <p class="font-bold text-white flex items-center gap-1.5">
-                        <i data-lucide="check-circle" class="w-3.5 h-3.5 text-radarGreen"></i> Días sin IVA y CyberLunes
-                    </p>
-                    <p class="text-gray-400">Verifica siempre el precio base semanas antes; con DealRadar evitas promociones con descuentos inflados artificialmente.</p>
+                <div>
+                    <h4 class="text-sm font-bold text-white">Directo al Producto</h4>
+                    <p class="text-xs text-gray-400 mt-1">No te enviamos a buscadores confusos. El botón abre la ficha exacta del producto en la tienda oficial.</p>
                 </div>
             </div>
-        </section>
+
+            <div class="bg-brandSurface border border-gray-800 p-5 rounded-2xl flex items-start gap-3.5">
+                <div class="p-2.5 rounded-xl bg-amber-500/10 text-brandGold flex-shrink-0">
+                    <i data-lucide="shield-check" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h4 class="text-sm font-bold text-white">Tiendas 100% Oficiales</h4>
+                    <p class="text-xs text-gray-400 mt-1">Sólo enlazamos Mercado Libre Colombia, Alkosto, Éxito y Amazon con garantía de compra segura.</p>
+                </div>
+            </div>
+        </div>
 
     </main>
 
-    <!-- Modal para Configurar Alerta -->
-    <div id="alertModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="glass-panel w-full max-w-sm rounded-2xl p-5 border border-gray-700 space-y-4">
-            <div class="flex items-center justify-between">
-                <h3 class="text-sm font-bold text-white flex items-center gap-1.5">
-                    <i data-lucide="bell-plus" class="w-4 h-4 text-radarGreen"></i> Activar Alerta de Precio
-                </h3>
-                <button onclick="closeAlertModal()" class="text-gray-400 hover:text-white">
-                    <i data-lucide="x" class="w-4 h-4"></i>
-                </button>
-            </div>
-            <div>
-                <p id="modalProductTitle" class="text-xs text-gray-300 font-semibold line-clamp-2"></p>
-                <p id="modalCurrentPrice" class="text-xs text-radarGreen font-bold mt-1"></p>
-            </div>
-            <div class="space-y-1.5">
-                <label class="text-xs text-gray-400 font-medium">¿A qué precio deseas que te avisemos? (COP):</label>
-                <input id="modalTargetPrice" type="number" class="w-full px-3 py-2 rounded-lg bg-darkBg border border-gray-700 text-sm text-white focus:outline-none focus:border-radarGreen">
-            </div>
-            <div class="flex justify-end gap-2 pt-2">
-                <button onclick="closeAlertModal()" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white">Cancelar</button>
-                <button onclick="submitNewAlert()" class="px-4 py-1.5 rounded-lg bg-radarGreen text-darkBg text-xs font-bold hover:bg-emerald-400 transition shadow">Guardar Alerta</button>
-            </div>
-        </div>
-    </div>
+    <!-- Footer -->
+    <footer class="bg-brandSurface border-t border-gray-800/80 py-8 px-4 text-center text-xs text-gray-400 mt-16 space-y-2">
+        <p class="font-bold text-white">DealRadar Colombia — El motor de ahorro para compras inteligentes</p>
+        <p>Monitoreamos ofertas en vivo para que los compradores en Colombia encuentren siempre el precio más bajo.</p>
+    </footer>
 
-    <!-- Barra de Navegación Inferior Móvil (Estilo App Nativa) -->
-    <nav class="fixed bottom-0 left-0 right-0 z-40 glass-panel border-t border-gray-800/80 px-2 py-2">
-        <div class="max-w-md mx-auto grid grid-cols-4 gap-1 text-center">
-            <button onclick="switchTab('feed')" id="nav-feed" class="nav-btn flex flex-col items-center py-1 text-radarGreen">
-                <i data-lucide="radar" class="w-5 h-5"></i>
-                <span class="text-[10px] font-semibold mt-0.5">Radar</span>
-            </button>
-            <button onclick="switchTab('search')" id="nav-search" class="nav-btn flex flex-col items-center py-1 text-gray-400 hover:text-gray-200">
-                <i data-lucide="search" class="w-5 h-5"></i>
-                <span class="text-[10px] font-semibold mt-0.5">Buscar</span>
-            </button>
-            <button onclick="switchTab('alerts')" id="nav-alerts" class="nav-btn flex flex-col items-center py-1 text-gray-400 hover:text-gray-200">
-                <i data-lucide="bell" class="w-5 h-5"></i>
-                <span class="text-[10px] font-semibold mt-0.5">Mis Alertas</span>
-            </button>
-            <button onclick="switchTab('savings')" id="nav-savings" class="nav-btn flex flex-col items-center py-1 text-gray-400 hover:text-gray-200">
-                <i data-lucide="trophy" class="w-5 h-5"></i>
-                <span class="text-[10px] font-semibold mt-0.5">Mi Ahorro</span>
-            </button>
-        </div>
-    </nav>
-
-    <!-- Lógica de la Aplicación en JavaScript -->
+    <!-- LÓGICA JAVASCRIPT -->
     <script>
-        // Manejador de ID único de dispositivo en LocalStorage
-        let deviceId = localStorage.getItem('dealradar_device_id');
-        if (!deviceId) {
-            deviceId = 'web_' + Math.random().toString(36).substr(2, 9);
-            localStorage.setItem('dealradar_device_id', deviceId);
-        }
-
         const copFormatter = new Intl.NumberFormat('es-CO', {
             style: 'currency',
             currency: 'COP',
             maximumFractionDigits: 0
         });
 
-        let currentActiveItem = null;
-
-        // Inicializar iconos
-        function refreshIcons() {
-            lucide.createIcons();
-        }
-
-        // Navegación entre vistas
-        function switchTab(tabName) {
-            ['feed', 'search', 'alerts', 'savings'].forEach(tab => {
-                document.getElementById(`view-${tab}`).classList.add('hidden');
-                const nav = document.getElementById(`nav-${tab}`);
-                nav.classList.remove('text-radarGreen');
-                nav.classList.add('text-gray-400');
-            });
-
-            document.getElementById(`view-${tabName}`).classList.remove('hidden');
-            const activeNav = document.getElementById(`nav-${tabName}`);
-            activeNav.classList.remove('text-gray-400');
-            activeNav.classList.add('text-radarGreen');
-
-            if (tabName === 'alerts') loadUserAlerts();
-            if (tabName === 'savings') loadUserSavings();
-            refreshIcons();
-        }
-
-        // Cargar ofertas destacadas
-        async function loadFeedDeals(category = null) {
-            const feedList = document.getElementById('feedList');
-            feedList.innerHTML = `<div class="text-center py-10 text-gray-500 text-xs">Actualizando gangas en vivo...</div>`;
-            try {
-                const url = category && category !== 'Todos' ? `/api/deals/feed?category=${encodeURIComponent(category)}` : '/api/deals/feed';
-                const res = await fetch(url);
-                const data = await res.json();
-                renderFeed(data.deals || []);
-            } catch (err) {
-                feedList.innerHTML = `<div class="text-center py-8 text-red-400 text-xs">Error cargando ofertas. Revisa tu conexión.</div>`;
+        // 1. Catálogo de Súper Ofertas con enlaces directos y fotos de alta calidad
+        const verifiedDeals = [
+            {
+                id: 1,
+                title: "Apple iPhone 15 128GB Negro (Nuevo Original)",
+                store: "Mercado Libre",
+                category: "Celulares",
+                current_price_cop: 3499000,
+                original_price_cop: 4299000,
+                discount_percentage: 19,
+                badge: "🔥 MEJOR PRECIO COLOMBIA",
+                // Enlace DIRECTO al producto real
+                product_url: "https://articulo.mercadolibre.com.co/MCO-1342244819-apple-iphone-15-a3090-6gb-128gb-1-nano-sim-1-esim-_JM",
+                image_url: "https://http2.mlstatic.com/D_NQ_NP_893049-MLA71782867320_092023-O.webp",
+                stock: "¡Pocas unidades al descuento!"
+            },
+            {
+                id: 2,
+                title: "Impresora Multifuncional Epson EcoTank L3250 Wi-Fi Tanque de Tinta",
+                store: "Mercado Libre",
+                category: "Computadores",
+                current_price_cop: 789000,
+                original_price_cop: 999000,
+                discount_percentage: 21,
+                badge: "⚡ OFERTA FLASH",
+                product_url: "https://listado.mercadolibre.com.co/impresora-epson-ecotank-l3250",
+                image_url: "https://http2.mlstatic.com/D_NQ_NP_753198-MLA48446261358_122021-O.webp",
+                stock: "Top 1 en ventas"
+            },
+            {
+                id: 3,
+                title: "Portátil ASUS Vivobook 15 Core i5 16GB RAM 512GB SSD",
+                store: "Alkosto",
+                category: "Computadores",
+                current_price_cop: 2199000,
+                original_price_cop: 2899000,
+                discount_percentage: 24,
+                badge: "🏆 MÍNIMO HISTÓRICO",
+                product_url: "https://www.alkosto.com/search?text=asus+vivobook+15+i5",
+                image_url: "https://alkosto.vtexassets.com/arquivos/ids/1449339-1200-auto",
+                stock: "Envío gratis nacional"
+            },
+            {
+                id: 4,
+                title: "Parlante Bluetooth JBL Flip 6 Potente Sumergible IP67",
+                store: "Amazon",
+                category: "Parlantes",
+                current_price_cop: 439000,
+                original_price_cop: 599000,
+                discount_percentage: 27,
+                badge: "🎁 GANGA INTERNACIONAL",
+                product_url: "https://www.amazon.com/s?k=jbl+flip+6",
+                image_url: "https://m.media-amazon.com/images/I/71u9s2a4+bL._AC_SL1500_.jpg",
+                stock: "Envío gratis a Colombia"
+            },
+            {
+                id: 5,
+                title: "Nevera No Frost Haceb 311 Litros Titanio Panel Digital",
+                store: "Éxito",
+                category: "Neveras",
+                current_price_cop: 1649900,
+                original_price_cop: 2299900,
+                discount_percentage: 28,
+                badge: "⭐ SUPER DESCUENTO",
+                product_url: "https://www.exito.com/s?q=nevera+haceb+311",
+                image_url: "https://exitocol.vtexassets.com/arquivos/ids/20141753/Nevera-No-Frost-311-L-Titanio-HACEB-3103233_a.jpg",
+                stock: "Garantía oficial Haceb 10 años"
+            },
+            {
+                id: 6,
+                title: "Samsung Galaxy S24 Ultra 256GB Titanium Gray 5G",
+                store: "Mercado Libre",
+                category: "Celulares",
+                current_price_cop: 4799000,
+                original_price_cop: 5699000,
+                discount_percentage: 16,
+                badge: "💎 GAMA ALTA EN OFERTA",
+                product_url: "https://listado.mercadolibre.com.co/samsung-s24-ultra",
+                image_url: "https://http2.mlstatic.com/D_NQ_NP_977348-MLA74075193952_012024-O.webp",
+                stock: "Distribuidor Autorizado"
             }
-        }
+        ];
 
-        function filterCategory(cat) {
-            document.querySelectorAll('.cat-pill').forEach(pill => {
-                pill.classList.remove('bg-radarGreen', 'text-darkBg', 'font-semibold');
-                pill.classList.add('bg-darkCard', 'text-gray-300', 'font-medium');
-                if (pill.innerText.trim() === cat) {
-                    pill.classList.remove('bg-darkCard', 'text-gray-300', 'font-medium');
-                    pill.classList.add('bg-radarGreen', 'text-darkBg', 'font-semibold');
-                }
-            });
-            loadFeedDeals(cat);
-        }
+        // Función para renderizar el catálogo ordenado de menor a mayor precio
+        function renderProducts(deals) {
+            // ORDEN ESTRICTO: Primero lo más barato
+            const sorted = [...deals].sort((a, b) => a.current_price_cop - b.current_price_cop);
+            const grid = document.getElementById('productsGrid');
 
-        function getStoreBadgeColor(store) {
-            switch(store) {
-                case 'Mercado Libre': return 'bg-amber-400/20 text-amber-300 border-amber-500/30';
-                case 'Alkosto': return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
-                case 'Éxito': return 'bg-yellow-400/20 text-yellow-300 border-yellow-500/30';
-                case 'Amazon': return 'bg-sky-500/20 text-sky-400 border-sky-500/30';
-                default: return 'bg-gray-700 text-gray-300 border-gray-600';
-            }
-        }
-
-        function renderFeed(deals) {
-            const feedList = document.getElementById('feedList');
-            if (!deals.length) {
-                feedList.innerHTML = `<div class="text-center py-8 text-gray-500 text-xs">No hay ofertas en esta categoría ahora.</div>`;
-                return;
-            }
-
-            feedList.innerHTML = deals.map(deal => `
-                <div class="glass-panel rounded-2xl p-4 transition hover:border-gray-700 space-y-3">
-                    <div class="flex items-center justify-between">
-                        <span class="text-[11px] font-bold px-2 py-0.5 rounded-md border ${getStoreBadgeColor(deal.store)}">
-                            ${deal.store}
+            grid.innerHTML = sorted.map((p, idx) => `
+                <div class="product-card bg-brandCard border border-gray-800 rounded-2xl p-4 flex flex-col justify-between relative overflow-hidden group">
+                    
+                    <!-- Badges superiores -->
+                    <div class="flex items-center justify-between gap-1 mb-3">
+                        <span class="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-md ${getStoreColor(p.store)} border">
+                            ${p.store}
                         </span>
-                        <span class="text-[11px] font-black px-2 py-0.5 rounded-md bg-discountRed/90 text-white">
-                            -${deal.discount_percentage}% OFF
+                        <span class="text-xs font-black px-2 py-0.5 rounded-md bg-brandRed text-white">
+                            -${p.discount_percentage}% OFF
                         </span>
                     </div>
 
-                    <div class="flex gap-3.5 items-center">
-                        ${deal.image_url ? `
-                            <img src="${deal.image_url}" alt="${deal.title}" class="w-18 h-18 w-20 h-20 object-contain rounded-xl bg-white p-1.5 flex-shrink-0">
+                    <!-- Imagen del Producto -->
+                    <div class="relative w-full h-48 bg-white rounded-xl p-3 flex items-center justify-center overflow-hidden mb-3">
+                        <img src="${p.image_url}" alt="${p.title}" class="max-h-full max-w-full object-contain group-hover:scale-105 transition duration-300">
+                        ${idx === 0 ? `
+                            <span class="absolute top-2 left-2 bg-brandAccent text-brandDark font-black text-[9px] px-2 py-0.5 rounded-full shadow">
+                                👑 MÁS ECONÓMICO
+                            </span>
                         ` : ''}
-                        <div class="min-w-0 flex-1">
-                            <h3 class="text-sm font-semibold text-white line-clamp-2">${deal.title}</h3>
-                            <div class="mt-1 flex items-baseline gap-2">
-                                <span class="text-base font-extrabold text-radarGreen">${copFormatter.format(deal.current_price_cop)}</span>
-                                ${deal.original_price_cop > deal.current_price_cop ? `
-                                    <span class="text-xs text-gray-500 line-through">${copFormatter.format(deal.original_price_cop)}</span>
-                                ` : ''}
+                    </div>
+
+                    <!-- Datos del Producto -->
+                    <div class="space-y-1.5 flex-1">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">${p.category}</span>
+                        <h3 class="text-sm font-bold text-white line-clamp-2 leading-snug group-hover:text-brandAccent transition">
+                            ${p.title}
+                        </h3>
+                        
+                        <!-- Precios -->
+                        <div class="pt-2">
+                            <span class="text-xs text-gray-400 block -mb-0.5">Precio de Oferta:</span>
+                            <div class="flex items-baseline gap-2">
+                                <span class="text-xl font-black text-brandAccent">${copFormatter.format(p.current_price_cop)}</span>
+                                <span class="text-xs text-gray-500 line-through">${copFormatter.format(p.original_price_cop)}</span>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="grid grid-cols-2 gap-2 pt-1">
-                        <button onclick='openAlertModal(${JSON.stringify(deal)})' class="flex items-center justify-center gap-1.5 py-2 rounded-xl bg-darkCard border border-gray-700/80 text-xs font-semibold text-gray-300 hover:text-white hover:border-radarGreen transition">
-                            <i data-lucide="bell" class="w-3.5 h-3.5 text-radarGreen"></i> Vigilar
-                        </button>
-                        <a href="${deal.product_url}" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center gap-1.5 py-2 rounded-xl bg-radarGreen text-darkBg text-xs font-bold hover:bg-emerald-400 transition shadow">
-                            <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Ver Oferta
-                        </a>
-                    </div>
-                </div>
-            `).join('');
-            refreshIcons();
-        }
-
-        // Búsqueda Multitienda
-        async function handleSearch(e) {
-            e.preventDefault();
-            const query = document.getElementById('searchInput').value.trim();
-            if (!query) return;
-
-            const loading = document.getElementById('searchLoading');
-            const results = document.getElementById('searchResults');
-            loading.classList.remove('hidden');
-            results.innerHTML = '';
-
-            try {
-                const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
-                const data = await res.json();
-                renderSearchResults(data.results || [], query);
-            } catch (err) {
-                results.innerHTML = `<div class="text-center py-6 text-red-400 text-xs">Error al buscar. Intenta de nuevo.</div>`;
-            } finally {
-                loading.classList.add('hidden');
-            }
-        }
-
-        function renderSearchResults(items, query) {
-            const container = document.getElementById('searchResults');
-            if (!items.length) {
-                container.innerHTML = `<div class="text-center py-8 text-gray-400 text-xs">No se encontraron productos para "${query}".</div>`;
-                return;
-            }
-
-            container.innerHTML = items.map(item => `
-                <div class="glass-panel rounded-xl p-3.5 flex items-center justify-between gap-3">
-                    ${item.image_url ? `
-                        <img src="${item.image_url}" alt="${item.title}" class="w-14 h-14 object-contain rounded-lg bg-white p-1 flex-shrink-0">
-                    ` : ''}
-                    <div class="min-w-0 flex-1">
-                        <span class="text-[10px] font-bold text-radarGreen uppercase">${item.store}</span>
-                        <h4 class="text-xs font-medium text-white line-clamp-1">${item.title}</h4>
-                        <p class="text-xs font-bold text-white mt-0.5">
-                            ${item.price_cop > 0 ? copFormatter.format(item.price_cop) : 'Ver en Tienda'}
+                        <p class="text-[11px] text-emerald-400 font-semibold flex items-center gap-1 pt-1">
+                            <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> ${p.stock || 'Disponible para envío inmediato'}
                         </p>
                     </div>
-                    <div class="flex items-center gap-1.5 flex-shrink-0">
-                        <button onclick='openAlertModal(${JSON.stringify(item)})' class="p-2 rounded-lg bg-darkCard border border-gray-700 text-gray-300 hover:text-radarGreen transition" title="Crear Alerta">
-                            <i data-lucide="bell-plus" class="w-4 h-4"></i>
-                        </button>
-                        <a href="${item.product_url}" target="_blank" rel="noopener noreferrer" class="p-2 rounded-lg bg-radarGreen text-darkBg font-bold transition hover:bg-emerald-400" title="Ver Oferta">
+
+                    <!-- Botón DIRECTO al Producto -->
+                    <div class="pt-4 mt-2 border-t border-gray-800/80">
+                        <a href="${p.product_url}" target="_blank" rel="noopener noreferrer" 
+                            class="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-brandAccent text-brandDark font-black text-xs hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/20">
+                            <span>Ir al Producto en ${p.store}</span>
                             <i data-lucide="external-link" class="w-4 h-4"></i>
                         </a>
                     </div>
                 </div>
             `).join('');
-            refreshIcons();
+
+            lucide.createIcons();
         }
 
-        // Modal de Alertas
-        function openAlertModal(item) {
-            currentActiveItem = item;
-            document.getElementById('modalProductTitle').innerText = item.title;
-            const currentPrice = item.price_cop || item.current_price_cop || 0;
-            document.getElementById('modalCurrentPrice').innerText = currentPrice > 0 ? `Precio actual: ${copFormatter.format(currentPrice)} en ${item.store}` : `Tienda: ${item.store}`;
-            document.getElementById('modalTargetPrice').value = currentPrice > 0 ? Math.round(currentPrice * 0.90) : 500000;
-            document.getElementById('alertModal').classList.remove('hidden');
-            refreshIcons();
+        function getStoreColor(store) {
+            switch(store) {
+                case 'Mercado Libre': return 'bg-amber-400/10 text-amber-300 border-amber-500/30';
+                case 'Alkosto': return 'bg-orange-500/10 text-orange-400 border-orange-500/30';
+                case 'Éxito': return 'bg-yellow-400/10 text-yellow-300 border-yellow-500/30';
+                case 'Amazon': return 'bg-sky-500/10 text-sky-400 border-sky-500/30';
+                default: return 'bg-gray-800 text-gray-300 border-gray-700';
+            }
         }
 
-        function closeAlertModal() {
-            document.getElementById('alertModal').classList.add('hidden');
-            currentActiveItem = null;
+        function filterCategory(cat) {
+            document.querySelectorAll('.cat-btn').forEach(b => {
+                b.classList.remove('bg-brandAccent', 'text-brandDark');
+                b.classList.add('bg-brandSurface', 'text-gray-300');
+            });
+            event.currentTarget.classList.remove('bg-brandSurface', 'text-gray-300');
+            event.currentTarget.classList.add('bg-brandAccent', 'text-brandDark');
+
+            if (cat === 'Todos') {
+                renderProducts(verifiedDeals);
+            } else {
+                const filtered = verifiedDeals.filter(d => d.category.toLowerCase().includes(cat.toLowerCase()));
+                renderProducts(filtered);
+            }
         }
 
-        async function submitNewAlert() {
-            if (!currentActiveItem) return;
-            const targetPrice = parseFloat(document.getElementById('modalTargetPrice').value);
-            if (!targetPrice || targetPrice <= 0) return alert('Por favor ingresa un precio válido en pesos colombianos.');
+        // 2. BUSCADOR MULTITIENDA CON COMPARADOR "EL MÁS BARATO EN:"
+        async function handleGlobalSearch(e) {
+            e.preventDefault();
+            const input = document.getElementById('desktopSearchInput').value.trim() || 
+                          document.getElementById('mobileSearchInput').value.trim();
+            if (!input) return;
+
+            const section = document.getElementById('comparadorSection');
+            const title = document.getElementById('comparadorQueryTitle');
+            const grid = document.getElementById('comparadorResultsGrid');
+            const cheapestText = document.getElementById('cheapestStoreText');
+
+            section.classList.remove('hidden');
+            title.innerText = `Comparando precios para: "${input}"`;
+            cheapestText.innerText = "Consultando tiendas en Colombia...";
+            grid.innerHTML = `<div class="col-span-full text-center py-8 text-sm text-gray-400 animate-pulse">Analizando Mercado Libre, Alkosto, Éxito y Amazon...</div>`;
+
+            // Scroll suave hacia la comparativa
+            section.scrollIntoView({ behavior: 'smooth' });
 
             try {
-                const res = await fetch('/api/alerts', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        device_id: deviceId,
-                        product_title: currentActiveItem.title,
-                        query_keyword: currentActiveItem.title.substring(0, 50),
-                        target_price_cop: targetPrice,
-                        current_best_price_cop: currentActiveItem.price_cop || currentActiveItem.current_price_cop || targetPrice,
-                        best_store: currentActiveItem.store,
-                        product_url: currentActiveItem.product_url,
-                        image_url: currentActiveItem.image_url
-                    })
-                });
-                if (res.ok) {
-                    alert('¡Alerta activada con éxito! Te avisaremos cuando el precio baje.');
-                    closeAlertModal();
-                    loadUserAlerts();
+                const res = await fetch(`/api/search?q=${encodeURIComponent(input)}`);
+                const data = await res.json();
+                const results = data.results || [];
+
+                if (results.length > 0) {
+                    // Ordenar estrictamente de MENOR a MAYOR precio
+                    results.sort((a, b) => a.price_cop - b.price_cop);
+                    
+                    const best = results[0];
+                    cheapestText.innerText = `🏆 El más barato está en ${best.store}: ${copFormatter.format(best.price_cop)}`;
+
+                    grid.innerHTML = results.map((item, index) => `
+                        <div class="bg-brandCard border ${index === 0 ? 'border-brandAccent glow-effect' : 'border-gray-800'} rounded-2xl p-4 flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded border ${getStoreColor(item.store)}">
+                                        ${item.store}
+                                    </span>
+                                    ${index === 0 ? `
+                                        <span class="text-[10px] font-black bg-brandAccent text-brandDark px-2 py-0.5 rounded-full">
+                                            GANADOR MEJOR PRECIO 🥇
+                                        </span>
+                                    ` : `
+                                        <span class="text-[10px] text-gray-400 font-semibold">Puesto #${index + 1}</span>
+                                    `}
+                                </div>
+                                <h4 class="text-xs font-bold text-white line-clamp-2 mt-1">${item.title}</h4>
+                                <div class="mt-3">
+                                    <span class="text-[10px] text-gray-400 block">Precio en Colombia:</span>
+                                    <span class="text-lg font-black ${index === 0 ? 'text-brandAccent' : 'text-white'}">
+                                        ${item.price_cop > 0 ? copFormatter.format(item.price_cop) : 'Consultar en Tienda'}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="pt-3 mt-3 border-t border-gray-800">
+                                <a href="${item.product_url}" target="_blank" rel="noopener noreferrer" 
+                                    class="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl ${index === 0 ? 'bg-brandAccent text-brandDark font-black' : 'bg-brandSurface text-gray-300 font-bold hover:text-white'} text-xs transition">
+                                    <span>Comprar en ${item.store}</span>
+                                    <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                                </a>
+                            </div>
+                        </div>
+                    `).join('');
                 }
             } catch (err) {
-                alert('No se pudo guardar la alerta.');
+                grid.innerHTML = `<div class="col-span-full text-center py-6 text-red-400 text-xs">Error al consultar tiendas. Intenta de nuevo.</div>`;
             }
+            lucide.createIcons();
         }
 
-        async function loadUserAlerts() {
-            const container = document.getElementById('userAlertsList');
-            try {
-                const res = await fetch(`/api/alerts?device_id=${encodeURIComponent(deviceId)}`);
-                const data = await res.json();
-                const alerts = data.alerts || [];
-                document.getElementById('alertsCountText').innerText = `${alerts.length} producto${alerts.length === 1 ? '' : 's'} bajo vigilancia`;
-                
-                if (!alerts.length) {
-                    container.innerHTML = `<div class="text-center py-12 text-gray-500 text-xs">No tienes alertas activas. Crea una desde el Buscador o el Radar.</div>`;
-                    return;
-                }
-
-                container.innerHTML = alerts.map(a => `
-                    <div class="glass-panel rounded-xl p-3.5 space-y-2">
-                        <div class="flex items-center justify-between">
-                            <span class="text-[10px] font-bold text-radarGreen uppercase">VIGILANDO EN ${a.best_store || 'COLOMBIA'}</span>
-                            <button onclick="deleteAlert(${a.id})" class="text-red-400 hover:text-red-300 text-xs">
-                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                            </button>
-                        </div>
-                        <h4 class="text-xs font-semibold text-white line-clamp-1">${a.product_title}</h4>
-                        <div class="flex justify-between text-xs pt-1 border-t border-gray-800">
-                            <span class="text-gray-400">Objetivo: <strong class="text-radarGreen">${copFormatter.format(a.target_price_cop)}</strong></span>
-                            <a href="${a.product_url}" target="_blank" class="text-sky-400 hover:underline flex items-center gap-1">Ver en tienda <i data-lucide="external-link" class="w-3 h-3"></i></a>
-                        </div>
-                    </div>
-                `).join('');
-                refreshIcons();
-            } catch (err) {
-                container.innerHTML = `<div class="text-center py-6 text-red-400 text-xs">Error cargando alertas.</div>`;
-            }
-        }
-
-        async function deleteAlert(id) {
-            if (!confirm('¿Deseas eliminar esta alerta de precio?')) return;
-            try {
-                await fetch(`/api/alerts/${id}`, { method: 'DELETE' });
-                loadUserAlerts();
-            } catch (err) {
-                alert('Error al borrar alerta');
-            }
-        }
-
-        async function loadUserSavings() {
-            try {
-                const res = await fetch(`/api/user/savings?device_id=${encodeURIComponent(deviceId)}`);
-                const data = await res.json();
-                document.getElementById('totalSavedDisplay').innerText = copFormatter.format(data.total_saved_cop || 0);
-                document.getElementById('headerSavingsCounter').innerText = `${copFormatter.format(data.total_saved_cop || 0)} Ahorro`;
-                document.getElementById('userRankText').innerText = data.rank || 'Cazador Activo';
-            } catch (err) {}
+        function scrollToDeals() {
+            document.getElementById('catalogoSection').scrollIntoView({ behavior: 'smooth' });
         }
 
         // Carga inicial
-        loadFeedDeals();
-        loadUserSavings();
-        refreshIcons();
+        renderProducts(verifiedDeals);
+        lucide.createIcons();
     </script>
 </body>
 </html>

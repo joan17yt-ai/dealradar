@@ -17,7 +17,7 @@ from app.services.notifications import init_firebase
 scheduler = AsyncIOScheduler()
 
 def seed_initial_deals(db: Session):
-    # Limpiar y regenerar con URLs 100% funcionales (sin errores 404)
+    # Forzar actualización de ofertas destacadas en la BD para eliminar enlaces viejos con 404
     db.query(FeaturedDeal).delete()
     deals = [
         FeaturedDeal(
@@ -38,7 +38,6 @@ def seed_initial_deals(db: Session):
             current_price_cop=2199000.0,
             original_price_cop=2899000.0,
             discount_percentage=24,
-            # URL de búsqueda directa garantizada que nunca da 404
             product_url="https://www.alkosto.com/search?text=asus+vivobook+15+i5",
             image_url="https://alkosto.vtexassets.com/arquivos/ids/1449339-1200-auto",
             badge="OFERTA FLASH"
@@ -50,8 +49,8 @@ def seed_initial_deals(db: Session):
             current_price_cop=1649900.0,
             original_price_cop=2299900.0,
             discount_percentage=28,
-            # URL de búsqueda directa en Éxito que nunca da 404
-            product_url="https://www.exito.com/nevera-haceb-311?_q=nevera-haceb-311&map=ft",
+            # URL canónica de búsqueda oficial en Éxito (nunca arroja 404)
+            product_url="https://www.exito.com/s?q=nevera+haceb+311",
             image_url="https://exitocol.vtexassets.com/arquivos/ids/20141753/Nevera-No-Frost-311-L-Titanio-HACEB-3103233_a.jpg",
             badge="MEJOR PRECIO"
         ),
@@ -120,6 +119,19 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+from fastapi.responses import HTMLResponse
+import os
+
+static_file_path = os.path.join(os.path.dirname(__file__), 'static', 'index.html')
+
+@app.get('/', response_class=HTMLResponse)
+async def serve_index():
+    if os.path.exists(static_file_path):
+        with open(static_file_path, 'r', encoding='utf-8') as f:
+            return HTMLResponse(content=f.read())
+    return HTMLResponse(content='<h1>DealRadar API Live</h1>')
+
 
 class DeviceRegisterRequest(BaseModel):
     device_id: Optional[str] = None
